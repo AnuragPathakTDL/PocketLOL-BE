@@ -31,10 +31,14 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
     runs-on: ubuntu-latest
     env:
-      PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
-      REGION: ${{ vars.GCP_REGION }}
-      CLUSTER_NAME: ${{ vars.GKE_CLUSTER }}
-      AR_REPO: ${{ vars.ARTIFACT_REPO }}
+      # Prefer repo variables, then secrets, then known defaults for this repo.
+      PROJECT_ID: ${{ vars.GCP_PROJECT_ID || secrets.GCP_PROJECT_ID || 'pocketlol-68ca6' }}
+      REGION: ${{ vars.GCP_REGION || secrets.GCP_REGION || 'asia-south1' }}
+      CLUSTER_NAME: ${{ vars.GKE_CLUSTER || secrets.GKE_CLUSTER || 'pocketlol' }}
+      AR_REPO: ${{ vars.ARTIFACT_REPO || secrets.ARTIFACT_REPO || 'pocketlol' }}
+      # Prefer secrets for auth, then vars, then known defaults for this repo.
+      GCP_WIF_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER || vars.GCP_WORKLOAD_IDENTITY_PROVIDER || 'projects/912340818228/locations/global/workloadIdentityPools/github-pool/providers/github-provider' }}
+      GCP_DEPLOY_SA: ${{ secrets.GCP_SERVICE_ACCOUNT || vars.GCP_SERVICE_ACCOUNT || 'github-deployer@pocketlol-68ca6.iam.gserviceaccount.com' }}
       ENVIRONMENT: dev
       TAG: sha-${{ github.event.workflow_run.head_sha || github.sha }}
     steps:
@@ -52,11 +56,32 @@ jobs:
             echo "ENVIRONMENT=dev" >> "$GITHUB_ENV"
           fi
 
+      - name: Validate deploy configuration
+        run: |
+          set -euo pipefail
+
+          missing=0
+
+          if [[ -z "${PROJECT_ID}" ]]; then echo "Missing PROJECT_ID"; missing=1; fi
+          if [[ -z "${REGION}" ]]; then echo "Missing REGION"; missing=1; fi
+          if [[ -z "${CLUSTER_NAME}" ]]; then echo "Missing CLUSTER_NAME"; missing=1; fi
+          if [[ -z "${AR_REPO}" ]]; then echo "Missing AR_REPO"; missing=1; fi
+          if [[ -z "${GCP_WIF_PROVIDER}" ]]; then echo "Missing GCP_WIF_PROVIDER"; missing=1; fi
+          if [[ -z "${GCP_DEPLOY_SA}" ]]; then echo "Missing GCP_DEPLOY_SA"; missing=1; fi
+
+          if [[ "${missing}" -ne 0 ]]; then
+            echo
+            echo "Configure these in GitHub repo Settings -> Secrets and variables -> Actions"
+            echo "Variables: GCP_PROJECT_ID, GCP_REGION, GKE_CLUSTER, ARTIFACT_REPO"
+            echo "Secrets (recommended): GCP_WORKLOAD_IDENTITY_PROVIDER, GCP_SERVICE_ACCOUNT"
+            exit 1
+          fi
+
       - name: Auth to Google Cloud (OIDC)
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ env.GCP_WIF_PROVIDER }}
+          service_account: ${{ env.GCP_DEPLOY_SA }}
 
       - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v2
