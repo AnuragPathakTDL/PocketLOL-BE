@@ -299,7 +299,7 @@ export async function createApp(): Promise<FastifyInstance> {
         envelope: { disabled: true },
       },
     },
-    async () => ({ status: "ok babu" })
+    async () => ({ status: "ok babu shona" })
   );
 
   app.get(
