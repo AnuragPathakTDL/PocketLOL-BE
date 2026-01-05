@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set -euo pipefail
 
 if ! command -v gcloud >/dev/null 2>&1; then
@@ -24,14 +24,30 @@ tmpdir="$(mktemp -d)"
 cleanup() { rm -rf "$tmpdir"; }
 trap cleanup EXIT
 
+get_secret_optional() {
+  name="$1"
+  default_value="${2:-}"
+
+  if gcloud secrets describe "$name" --project "$PROJECT_ID" >/dev/null 2>&1; then
+    gcloud secrets versions access latest --project "$PROJECT_ID" --secret "$name" 2>/dev/null | tr -d '\n' || true
+    return 0
+  fi
+
+  printf '%s' "$default_value"
+}
+
 echo "Using project: $PROJECT_ID"
 echo "Using namespace: $NAMESPACE"
 
 kubectl get namespace "$NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$NAMESPACE"
 
-SERVICE_AUTH_TOKEN="$(gcloud secrets versions access latest --project "$PROJECT_ID" --secret service-auth-token)"
-DB_USER="$(gcloud secrets versions access latest --project "$PROJECT_ID" --secret db-user)"
-DB_PASS="$(gcloud secrets versions access latest --project "$PROJECT_ID" --secret db-password)"
+SERVICE_AUTH_TOKEN="$(gcloud secrets versions access latest --project "$PROJECT_ID" --secret service-auth-token | tr -d '\n')"
+DB_USER="$(gcloud secrets versions access latest --project "$PROJECT_ID" --secret db-user | tr -d '\n')"
+DB_PASS="$(gcloud secrets versions access latest --project "$PROJECT_ID" --secret db-password | tr -d '\n')"
+
+FIREBASE_CREDENTIALS_B64="${FIREBASE_CREDENTIALS_B64:-$(get_secret_optional firebase-credentials-b64 "")}"
+
+AUTH_SERVICE_INTERNAL_TOKEN="${AUTH_SERVICE_INTERNAL_TOKEN:-$(get_secret_optional streaming-auth-service-internal-token "$SERVICE_AUTH_TOKEN")}"
 
 CLOUD_SQL_CONNECTION_NAME="${CLOUD_SQL_CONNECTION_NAME:-$(gcloud sql instances describe "$SQL_INSTANCE" --project "$PROJECT_ID" --format='value(connectionName)')}"
 
@@ -80,6 +96,16 @@ kubectl -n "$NAMESPACE" create secret generic auth-service-secrets \
   --from-file=AUTH_JWT_PRIVATE_KEY="$tmpdir/auth_jwt_private.pem" \
   --from-file=AUTH_JWT_PUBLIC_KEY="$tmpdir/auth_jwt_public.pem" \
   --from-literal=USER_SERVICE_TOKEN="$SERVICE_AUTH_TOKEN" \
-  --from-literal=FIREBASE_CREDENTIALS_B64="${FIREBASE_CREDENTIALS_B64:-}"
+  --from-literal=FIREBASE_CREDENTIALS_B64="$FIREBASE_CREDENTIALS_B64"
+
+echo "Creating streaming-service-secrets"
+kubectl -n "$NAMESPACE" delete secret streaming-service-secrets >/dev/null 2>&1 || true
+kubectl -n "$NAMESPACE" create secret generic streaming-service-secrets \
+  --from-literal=CDN_SIGNING_SECRET="$(get_secret_optional streaming-cdn-signing-secret "")" \
+  --from-literal=CDN_CONTROL_API_KEY="$(get_secret_optional streaming-cdn-control-api-key "")" \
+  --from-literal=OME_API_KEY="$(get_secret_optional streaming-ome-api-key "")" \
+  --from-literal=OME_API_SECRET="$(get_secret_optional streaming-ome-api-secret "")" \
+  --from-literal=METRICS_ACCESS_TOKEN="$(get_secret_optional streaming-metrics-access-token "")" \
+  --from-literal=AUTH_SERVICE_INTERNAL_TOKEN="$AUTH_SERVICE_INTERNAL_TOKEN"
 
 echo "Done. Next: fill ConfigMaps for Redis/GCS/PubSub and apply kustomize overlay."

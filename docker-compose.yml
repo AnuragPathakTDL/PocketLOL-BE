@@ -30,7 +30,7 @@ services:
 
   content-service:
     build:
-      context: /ContentService
+      context: ContentService
       dockerfile: Dockerfile
     depends_on:
       postgres:
@@ -70,7 +70,7 @@ services:
 
   engagement-service:
     build:
-      context: /EngagementService
+      context: EngagementService
       dockerfile: Dockerfile
     environment:
       NODE_ENV: ${ENGAGEMENT_SERVICE_NODE_ENV:-production}
@@ -93,7 +93,7 @@ services:
 
   search-service:
     build:
-      context: /SearchService
+      context: SearchService
       dockerfile: Dockerfile
     environment:
       NODE_ENV: ${SEARCH_SERVICE_NODE_ENV:-production}
@@ -117,7 +117,7 @@ services:
 
   streaming-service:
     build:
-      context: /StreamingService
+      context: StreamingService
       dockerfile: Dockerfile
     environment:
       NODE_ENV: ${STREAMING_SERVICE_NODE_ENV:-production}
@@ -142,7 +142,7 @@ services:
 
   upload-service:
     build:
-      context: /UploadService
+      context: UploadService
       dockerfile: Dockerfile
     environment:
       NODE_ENV: ${UPLOAD_SERVICE_NODE_ENV:-production}
@@ -170,7 +170,7 @@ services:
 
   subscription-service:
     build:
-      context: /SubscriptionService
+      context: SubscriptionService
       dockerfile: Dockerfile
     depends_on:
       postgres:
@@ -204,7 +204,7 @@ services:
 
   user-service:
     build:
-      context: /UserService
+      context: UserService
       dockerfile: Dockerfile
     depends_on:
       postgres:
@@ -235,7 +235,7 @@ services:
 
   auth-service:
     build:
-      context: /AuthService
+      context: AuthService
       dockerfile: Dockerfile
     depends_on:
       postgres:
@@ -277,7 +277,7 @@ services:
 
   api-gateway:
     build:
-      context: /APIGW
+      context: APIGW
       dockerfile: Dockerfile
     depends_on:
       redis:
