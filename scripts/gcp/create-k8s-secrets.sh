@@ -101,10 +101,10 @@ kubectl -n "$NAMESPACE" create secret generic auth-service-secrets \
 echo "Creating streaming-service-secrets"
 kubectl -n "$NAMESPACE" delete secret streaming-service-secrets >/dev/null 2>&1 || true
 kubectl -n "$NAMESPACE" create secret generic streaming-service-secrets \
-  --from-literal=CDN_SIGNING_SECRET="$(get_secret_optional streaming-cdn-signing-secret "")" \
+  --from-literal=CDN_SIGNING_SECRET="$(get_secret_optional streaming-cdn-signing-secret "development-secret")" \
   --from-literal=CDN_CONTROL_API_KEY="$(get_secret_optional streaming-cdn-control-api-key "")" \
-  --from-literal=OME_API_KEY="$(get_secret_optional streaming-ome-api-key "")" \
-  --from-literal=OME_API_SECRET="$(get_secret_optional streaming-ome-api-secret "")" \
+  --from-literal=OME_API_KEY="$(get_secret_optional streaming-ome-api-key "local-key")" \
+  --from-literal=OME_API_SECRET="$(get_secret_optional streaming-ome-api-secret "local-secret")" \
   --from-literal=METRICS_ACCESS_TOKEN="$(get_secret_optional streaming-metrics-access-token "")" \
   --from-literal=AUTH_SERVICE_INTERNAL_TOKEN="$AUTH_SERVICE_INTERNAL_TOKEN"
 
