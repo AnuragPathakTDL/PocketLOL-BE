@@ -3,5 +3,9 @@ kind: Kustomization
 
 namespace: prod
 
+patchesStrategicMerge:
+  - patch-ingress-host.yaml
+
 resources:
   - ../../base
+  - managedcertificate.yaml

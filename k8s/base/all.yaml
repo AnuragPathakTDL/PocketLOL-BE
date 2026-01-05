@@ -52,6 +52,7 @@ spec:
       containers:
         - name: apigw
           image: apigw:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 3000
               name: http
@@ -125,21 +126,42 @@ spec:
       containers:
         - name: cloud-sql-proxy
           image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.4
-          command: ["/bin/sh", "-c"]
+          command: ["/cloud-sql-proxy"]
           args:
-            - exec /cloud-sql-proxy --address 0.0.0.0 --port 5432 "$CLOUD_SQL_CONNECTION_NAME"
+            [
+              "--address",
+              "0.0.0.0",
+              "--port",
+              "5432",
+              "$(CLOUD_SQL_CONNECTION_NAME)",
+            ]
           envFrom:
             - secretRef:
                 name: cloudsql-secrets
           securityContext:
             allowPrivilegeEscalation: false
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: 200m
+              memory: 512Mi
         - name: auth-service
           image: auth-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 4000
               name: http
             - containerPort: 50051
               name: grpc
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
           envFrom:
             - configMapRef:
                 name: auth-service-config
@@ -190,6 +212,7 @@ data:
   LOG_LEVEL: info
   AUTH_SERVICE_ADDRESS: auth-service:50051
 ---
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -211,21 +234,42 @@ spec:
       containers:
         - name: cloud-sql-proxy
           image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.4
-          command: ["/bin/sh", "-c"]
+          command: ["/cloud-sql-proxy"]
           args:
-            - exec /cloud-sql-proxy --address 0.0.0.0 --port 5432 "$CLOUD_SQL_CONNECTION_NAME"
+            [
+              "--address",
+              "0.0.0.0",
+              "--port",
+              "5432",
+              "$(CLOUD_SQL_CONNECTION_NAME)",
+            ]
           envFrom:
             - secretRef:
                 name: cloudsql-secrets
           securityContext:
             allowPrivilegeEscalation: false
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: 200m
+              memory: 512Mi
         - name: user-service
           image: user-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 4500
               name: http
             - containerPort: 50052
               name: grpc
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
           envFrom:
             - configMapRef:
                 name: user-service-config
@@ -284,6 +328,7 @@ data:
   SERIES_CACHE_TTL_SECONDS: "120"
   RELATED_CACHE_TTL_SECONDS: "180"
 ---
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -305,19 +350,40 @@ spec:
       containers:
         - name: cloud-sql-proxy
           image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.4
-          command: ["/bin/sh", "-c"]
+          command: ["/cloud-sql-proxy"]
           args:
-            - exec /cloud-sql-proxy --address 0.0.0.0 --port 5432 "$CLOUD_SQL_CONNECTION_NAME"
+            [
+              "--address",
+              "0.0.0.0",
+              "--port",
+              "5432",
+              "$(CLOUD_SQL_CONNECTION_NAME)",
+            ]
           envFrom:
             - secretRef:
                 name: cloudsql-secrets
           securityContext:
             allowPrivilegeEscalation: false
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: 200m
+              memory: 512Mi
         - name: content-service
           image: content-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 4600
               name: http
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
           envFrom:
             - configMapRef:
                 name: content-service-config
@@ -381,6 +447,7 @@ spec:
       containers:
         - name: engagement-service
           image: engagement-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 4700
               name: http
@@ -446,6 +513,7 @@ spec:
       containers:
         - name: search-service
           image: search-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 4800
               name: http
@@ -501,6 +569,7 @@ data:
   AUTH_SERVICE_INTROSPECTION_PATH: /api/v1/auth/introspect
   AUTH_SERVICE_TIMEOUT_MS: "2000"
 ---
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -520,6 +589,7 @@ spec:
       containers:
         - name: streaming-service
           image: streaming-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 4900
               name: http
@@ -572,6 +642,7 @@ data:
   CDN_UPLOAD_BASE_URL: ""
   SIGNED_UPLOAD_TTL_SECONDS: "600"
 ---
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -593,19 +664,40 @@ spec:
       containers:
         - name: cloud-sql-proxy
           image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.4
-          command: ["/bin/sh", "-c"]
+          command: ["/cloud-sql-proxy"]
           args:
-            - exec /cloud-sql-proxy --address 0.0.0.0 --port 5432 "$CLOUD_SQL_CONNECTION_NAME"
+            [
+              "--address",
+              "0.0.0.0",
+              "--port",
+              "5432",
+              "$(CLOUD_SQL_CONNECTION_NAME)",
+            ]
           envFrom:
             - secretRef:
                 name: cloudsql-secrets
           securityContext:
             allowPrivilegeEscalation: false
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: 200m
+              memory: 512Mi
         - name: upload-service
           image: upload-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5000
               name: http
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
           envFrom:
             - configMapRef:
                 name: upload-service-config
@@ -655,6 +747,7 @@ data:
   RAZORPAY_KEY_ID: ""
   RAZORPAY_KEY_SECRET: ""
 ---
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -676,21 +769,42 @@ spec:
       containers:
         - name: cloud-sql-proxy
           image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.4
-          command: ["/bin/sh", "-c"]
+          command: ["/cloud-sql-proxy"]
           args:
-            - exec /cloud-sql-proxy --address 0.0.0.0 --port 5432 "$CLOUD_SQL_CONNECTION_NAME"
+            [
+              "--address",
+              "0.0.0.0",
+              "--port",
+              "5432",
+              "$(CLOUD_SQL_CONNECTION_NAME)",
+            ]
           envFrom:
             - secretRef:
                 name: cloudsql-secrets
           securityContext:
             allowPrivilegeEscalation: false
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: 200m
+              memory: 512Mi
         - name: subscription-service
           image: subscription-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5100
               name: http
             - containerPort: 50071
               name: grpc
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
           envFrom:
             - configMapRef:
                 name: subscription-service-config

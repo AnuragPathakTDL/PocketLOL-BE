@@ -63,7 +63,37 @@ kubectl -n "$NAMESPACE" create secret generic cloudsql-secrets \
 
 mk_db_url() {
   db="$1"
-  echo "postgresql://${DB_USER}:${DB_PASS}@127.0.0.1:5432/${db}?schema=public"
+  urlencode() {
+    value="$1"
+
+    if command -v python3 >/dev/null 2>&1; then
+      python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$value"
+      return 0
+    fi
+
+    if command -v python >/dev/null 2>&1; then
+      python -c 'import sys
+try:
+  import urllib.parse as up
+except Exception:
+  import urllib as up
+print(up.quote(sys.argv[1], safe=""))' "$value"
+      return 0
+    fi
+
+    if command -v jq >/dev/null 2>&1; then
+      printf '%s' "$value" | jq -sRr @uri
+      return 0
+    fi
+
+    echo "Missing urlencode dependency (python3/python/jq). Install one or use a DB password without special characters." >&2
+    exit 1
+  }
+
+  user_enc="$(urlencode "$DB_USER" | tr -d '\n')"
+  pass_enc="$(urlencode "$DB_PASS" | tr -d '\n')"
+
+  echo "postgresql://${user_enc}:${pass_enc}@127.0.0.1:5432/${db}?schema=public"
 }
 
 create_db_secret() {

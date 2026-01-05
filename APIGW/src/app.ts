@@ -216,6 +216,10 @@ export async function createApp(): Promise<FastifyInstance> {
         imgSrc: ["'self'", "data:", ...getCdnHosts()],
         mediaSrc: ["'self'", ...getCdnHosts()],
         connectSrc: ["'self'", ...getCdnHosts()],
+        // Prevent forcing http subresources to https on environments
+        // that don't terminate TLS at the Ingress yet (e.g. dev via IP).
+        // Without this, Swagger UI assets under /docs/static fail to load.
+        upgradeInsecureRequests: null,
       },
     },
     hsts: {
