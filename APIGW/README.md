@@ -10,8 +10,8 @@ This project delivers the production Fastify gateway that fronts every PocketLOL
  npm install
  ```
 
-2. Copy `.env.example` to `.env` and customize values for your environment.
-3. Run the TypeScript service in development mode:
+1. Copy `.env.example` to `.env` and customize values for your environment.
+2. Run the TypeScript service in development mode:
 
  ```bash
  npm run dev

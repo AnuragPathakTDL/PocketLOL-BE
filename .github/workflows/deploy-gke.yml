@@ -1,6 +1,10 @@
 name: Deploy to GKE
 
 on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
     inputs:
       environment:
@@ -12,30 +16,41 @@ on:
           - dev
           - staging
           - prod
-  push:
-    branches: [main]
 
 permissions:
   contents: read
   id-token: write
+  actions: read
 
 concurrency:
-  group: deploy-${{ github.ref }}
+  group: deploy-${{ github.event_name }}-${{ (github.event.workflow_run && github.event.workflow_run.head_sha) || github.sha }}
   cancel-in-progress: false
 
 jobs:
   deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
     runs-on: ubuntu-latest
     env:
       PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
       REGION: ${{ vars.GCP_REGION }}
       CLUSTER_NAME: ${{ vars.GKE_CLUSTER }}
       AR_REPO: ${{ vars.ARTIFACT_REPO }}
-      ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'dev' }}
-      TAG: sha-${{ github.sha }}
+      ENVIRONMENT: dev
+      TAG: sha-${{ github.event.workflow_run.head_sha || github.sha }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Resolve target environment
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "ENVIRONMENT=${{ inputs.environment }}" >> "$GITHUB_ENV"
+          else
+            echo "ENVIRONMENT=dev" >> "$GITHUB_ENV"
+          fi
 
       - name: Auth to Google Cloud (OIDC)
         uses: google-github-actions/auth@v2
@@ -50,6 +65,9 @@ jobs:
 
       - name: Configure Docker auth
         run: gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Get GKE credentials
         uses: google-github-actions/get-gke-credentials@v2
@@ -79,8 +97,7 @@ jobs:
             local dir="$2"
             local image="${registry}/${name}:${TAG}"
             echo "Building ${image} from ${dir}"
-            docker build -t "${image}" "${dir}"
-            docker push "${image}"
+            docker buildx build --platform linux/amd64 -t "${image}" "${dir}" --push
           }
 
           build_push apigw ./APIGW
