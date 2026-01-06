@@ -2787,6 +2787,679 @@ const contentDocument: OpenAPIV3.Document = {
   },
 };
 
+const engagementDocument: OpenAPIV3.Document = {
+  openapi: "3.0.3",
+  info: {
+    title: "Engagement Service API",
+    version: "1.0.0",
+    description:
+      "Likes, saves, views, and engagement stats captured for PocketLOL reels and series.",
+  },
+  paths: {
+    "/like": {
+      post: {
+        summary: "Publish an engagement event",
+        description:
+          "Publishes an engagement action (like/unlike/view/favorite) for a video.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/EngagementEventBody" },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Engagement event recorded successfully.",
+            content: successContent({
+              $ref: "#/components/schemas/EngagementEventData",
+            }),
+          },
+          "400": { description: "Invalid request.", content: errorContent() },
+          "401": {
+            description: "Authentication required.",
+            content: errorContent(),
+          },
+          "500": {
+            description: "Internal error.",
+            content: errorContent(),
+          },
+        },
+      },
+    },
+    "/reels/{id}/save": {
+      post: {
+        summary: "Save a reel",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Reel saved.",
+            content: successContent({
+              $ref: "#/components/schemas/EngagementSaveData",
+            }),
+          },
+          "400": { description: "Invalid request.", content: errorContent() },
+          "401": {
+            description: "Authentication required.",
+            content: errorContent(),
+          },
+          "500": {
+            description: "Internal error.",
+            content: errorContent(),
+          },
+        },
+      },
+      delete: {
+        summary: "Unsave a reel",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Reel unsaved.",
+            content: successContent({
+              $ref: "#/components/schemas/EngagementSaveData",
+            }),
+          },
+          "400": { description: "Invalid request.", content: errorContent() },
+          "401": {
+            description: "Authentication required.",
+            content: errorContent(),
+          },
+          "500": {
+            description: "Internal error.",
+            content: errorContent(),
+          },
+        },
+      },
+    },
+    "/reels/saved": {
+      get: {
+        summary: "List saved reels",
+        responses: {
+          "200": {
+            description: "Saved reel ids.",
+            content: successContent({
+              $ref: "#/components/schemas/EngagementListData",
+            }),
+          },
+          "401": {
+            description: "Authentication required.",
+            content: errorContent(),
+          },
+          "500": { description: "Internal error.", content: errorContent() },
+        },
+      },
+    },
+    "/reels/{id}/like": {
+      post: {
+        summary: "Like a reel",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Reel liked.",
+            content: successContent({
+              $ref: "#/components/schemas/EngagementLikeData",
+            }),
+          },
+          "400": { description: "Invalid request.", content: errorContent() },
+          "401": {
+            description: "Authentication required.",
+            content: errorContent(),
+          },
+          "500": { description: "Internal error.", content: errorContent() },
+        },
+      },
+      delete: {
+        summary: "Unlike a reel",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Reel unliked.",
+            content: successContent({
+              $ref: "#/components/schemas/EngagementLikeData",
+            }),
+          },
+          "400": { description: "Invalid request.", content: errorContent() },
+          "401": {
+            description: "Authentication required.",
+            content: errorContent(),
+          },
+          "500": { description: "Internal error.", content: errorContent() },
+        },
+      },
+    },
+    "/reels/liked": {
+      get: {
+        summary: "List liked reels",
+        responses: {
+          "200": {
+            description: "Liked reel ids.",
+            content: successContent({
+              $ref: "#/components/schemas/EngagementListData",
+            }),
+          },
+          "401": {
+            description: "Authentication required.",
+            content: errorContent(),
+          },
+          "500": { description: "Internal error.", content: errorContent() },
+        },
+      },
+    },
+    "/reels/{id}/view": {
+      post: {
+        summary: "Add a view to a reel",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "View recorded.",
+            content: successContent({
+              $ref: "#/components/schemas/EngagementViewData",
+            }),
+          },
+          "400": { description: "Invalid request.", content: errorContent() },
+          "401": {
+            description: "Authentication required.",
+            content: errorContent(),
+          },
+          "500": { description: "Internal error.", content: errorContent() },
+        },
+      },
+    },
+    "/reels/{id}/stats": {
+      get: {
+        summary: "Get reel engagement stats",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Engagement stats for the reel.",
+            content: successContent({
+              $ref: "#/components/schemas/EngagementStatsData",
+            }),
+          },
+          "401": {
+            description: "Authentication required.",
+            content: errorContent(),
+          },
+          "500": { description: "Internal error.", content: errorContent() },
+        },
+      },
+    },
+    "/series/{id}/save": {
+      post: {
+        summary: "Save a series",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Series saved.",
+            content: successContent({
+              $ref: "#/components/schemas/EngagementSaveData",
+            }),
+          },
+          "400": { description: "Invalid request.", content: errorContent() },
+          "401": {
+            description: "Authentication required.",
+            content: errorContent(),
+          },
+          "500": { description: "Internal error.", content: errorContent() },
+        },
+      },
+      delete: {
+        summary: "Unsave a series",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Series unsaved.",
+            content: successContent({
+              $ref: "#/components/schemas/EngagementSaveData",
+            }),
+          },
+          "400": { description: "Invalid request.", content: errorContent() },
+          "401": {
+            description: "Authentication required.",
+            content: errorContent(),
+          },
+          "500": { description: "Internal error.", content: errorContent() },
+        },
+      },
+    },
+    "/series/saved": {
+      get: {
+        summary: "List saved series",
+        responses: {
+          "200": {
+            description: "Saved series ids.",
+            content: successContent({
+              $ref: "#/components/schemas/EngagementListData",
+            }),
+          },
+          "401": {
+            description: "Authentication required.",
+            content: errorContent(),
+          },
+          "500": { description: "Internal error.", content: errorContent() },
+        },
+      },
+    },
+    "/series/{id}/like": {
+      post: {
+        summary: "Like a series",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Series liked.",
+            content: successContent({
+              $ref: "#/components/schemas/EngagementLikeData",
+            }),
+          },
+          "400": { description: "Invalid request.", content: errorContent() },
+          "401": {
+            description: "Authentication required.",
+            content: errorContent(),
+          },
+          "500": { description: "Internal error.", content: errorContent() },
+        },
+      },
+      delete: {
+        summary: "Unlike a series",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Series unliked.",
+            content: successContent({
+              $ref: "#/components/schemas/EngagementLikeData",
+            }),
+          },
+          "400": { description: "Invalid request.", content: errorContent() },
+          "401": {
+            description: "Authentication required.",
+            content: errorContent(),
+          },
+          "500": { description: "Internal error.", content: errorContent() },
+        },
+      },
+    },
+    "/series/liked": {
+      get: {
+        summary: "List liked series",
+        responses: {
+          "200": {
+            description: "Liked series ids.",
+            content: successContent({
+              $ref: "#/components/schemas/EngagementListData",
+            }),
+          },
+          "401": {
+            description: "Authentication required.",
+            content: errorContent(),
+          },
+          "500": { description: "Internal error.", content: errorContent() },
+        },
+      },
+    },
+    "/series/{id}/view": {
+      post: {
+        summary: "Add a view to a series",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "View recorded.",
+            content: successContent({
+              $ref: "#/components/schemas/EngagementViewData",
+            }),
+          },
+          "400": { description: "Invalid request.", content: errorContent() },
+          "401": {
+            description: "Authentication required.",
+            content: errorContent(),
+          },
+          "500": { description: "Internal error.", content: errorContent() },
+        },
+      },
+    },
+    "/series/{id}/stats": {
+      get: {
+        summary: "Get series engagement stats",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Engagement stats for the series.",
+            content: successContent({
+              $ref: "#/components/schemas/EngagementStatsData",
+            }),
+          },
+          "401": {
+            description: "Authentication required.",
+            content: errorContent(),
+          },
+          "500": { description: "Internal error.", content: errorContent() },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {
+      EngagementEventBody: {
+        type: "object",
+        additionalProperties: false,
+        required: ["videoId", "action"],
+        properties: {
+          videoId: { type: "string", format: "uuid" },
+          action: {
+            type: "string",
+            enum: ["like", "unlike", "view", "favorite"],
+            default: "like",
+          },
+          metadata: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              source: { type: "string", enum: ["mobile", "web", "tv"] },
+            },
+          },
+        },
+      },
+      EngagementEventData: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          likes: { type: "integer", format: "int32", minimum: 0 },
+          views: { type: "integer", format: "int32", minimum: 0 },
+        },
+      },
+      EngagementStatsData: {
+        type: "object",
+        additionalProperties: false,
+        required: ["likes", "views"],
+        properties: {
+          likes: { type: "integer", format: "int32", minimum: 0 },
+          views: { type: "integer", format: "int32", minimum: 0 },
+        },
+      },
+      EngagementLikeData: {
+        allOf: [
+          { $ref: "#/components/schemas/EngagementStatsData" },
+          {
+            type: "object",
+            additionalProperties: false,
+            required: ["liked"],
+            properties: { liked: { type: "boolean" } },
+          },
+        ],
+      },
+      EngagementSaveData: {
+        type: "object",
+        additionalProperties: false,
+        required: ["saved"],
+        properties: { saved: { type: "boolean" } },
+      },
+      EngagementViewData: {
+        type: "object",
+        additionalProperties: false,
+        required: ["views"],
+        properties: { views: { type: "integer", format: "int32", minimum: 0 } },
+      },
+      EngagementListData: {
+        type: "object",
+        additionalProperties: false,
+        required: ["ids"],
+        properties: {
+          ids: {
+            type: "array",
+            items: { type: "string", format: "uuid" },
+          },
+        },
+      },
+      ResponseEnvelope: {
+        type: "object",
+        additionalProperties: false,
+        required: [
+          "success",
+          "statusCode",
+          "userMessage",
+          "developerMessage",
+          "data",
+        ],
+        properties: {
+          success: {
+            type: "boolean",
+            description:
+              "Indicates whether the request completed successfully.",
+          },
+          statusCode: {
+            type: "integer",
+            format: "int32",
+            description:
+              "0 for success responses, otherwise mirrors the HTTP status code on errors.",
+          },
+          userMessage: {
+            type: "string",
+            description: "Message safe for end-user presentation.",
+          },
+          developerMessage: {
+            type: "string",
+            description:
+              "Message with diagnostic detail suitable for developers.",
+          },
+          data: {
+            type: "object",
+            description: "Payload returned when the request succeeds.",
+            additionalProperties: true,
+          },
+        },
+      },
+    },
+  },
+};
+
+const searchDocument: OpenAPIV3.Document = {
+  openapi: "3.0.3",
+  info: {
+    title: "Search Service API",
+    version: "1.0.0",
+    description: "Public search across the PocketLOL catalog.",
+  },
+  paths: {
+    "/": {
+      get: {
+        summary: "Search the catalog",
+        parameters: [
+          {
+            name: "q",
+            in: "query",
+            required: true,
+            schema: { type: "string", minLength: 2 },
+            description: "Search query.",
+          },
+          {
+            name: "limit",
+            in: "query",
+            required: false,
+            schema: {
+              type: "integer",
+              format: "int32",
+              minimum: 1,
+              maximum: 100,
+              default: 20,
+            },
+            description: "Maximum number of items to return.",
+          },
+          {
+            name: "cursor",
+            in: "query",
+            required: false,
+            schema: { type: "string" },
+            description: "Pagination cursor returned from a previous search.",
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Search results.",
+            content: successContent({
+              $ref: "#/components/schemas/SearchResponse",
+            }),
+          },
+          "400": { description: "Invalid request.", content: errorContent() },
+          "500": { description: "Internal error.", content: errorContent() },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {
+      SearchResult: {
+        type: "object",
+        additionalProperties: false,
+        required: ["id", "title", "type"],
+        properties: {
+          id: { type: "string" },
+          title: { type: "string" },
+          snippet: { type: "string" },
+          type: {
+            type: "string",
+            enum: ["video", "channel", "playlist"],
+            default: "video",
+          },
+        },
+      },
+      SearchResponse: {
+        type: "object",
+        additionalProperties: false,
+        required: ["items"],
+        properties: {
+          items: {
+            type: "array",
+            items: { $ref: "#/components/schemas/SearchResult" },
+          },
+          nextCursor: { type: "string" },
+        },
+      },
+      ResponseEnvelope: {
+        type: "object",
+        additionalProperties: false,
+        required: [
+          "success",
+          "statusCode",
+          "userMessage",
+          "developerMessage",
+          "data",
+        ],
+        properties: {
+          success: {
+            type: "boolean",
+            description:
+              "Indicates whether the request completed successfully.",
+          },
+          statusCode: {
+            type: "integer",
+            format: "int32",
+            description:
+              "0 for success responses, otherwise mirrors the HTTP status code on errors.",
+          },
+          userMessage: {
+            type: "string",
+            description: "Message safe for end-user presentation.",
+          },
+          developerMessage: {
+            type: "string",
+            description:
+              "Message with diagnostic detail suitable for developers.",
+          },
+          data: {
+            type: "object",
+            description: "Payload returned when the request succeeds.",
+            additionalProperties: true,
+          },
+        },
+      },
+    },
+  },
+};
+
 const subscriptionDocument: OpenAPIV3.Document = {
   openapi: "3.0.3",
   info: {
@@ -4490,6 +5163,8 @@ export function getGatewayServiceDocuments(): ServiceDocument[] {
     { service: findServiceByName("auth"), document: authDocument },
     { service: findServiceByName("user"), document: userDocument },
     { service: findServiceByName("content"), document: contentDocument },
+    { service: findServiceByName("engagement"), document: engagementDocument },
+    { service: findServiceByName("search"), document: searchDocument },
     {
       service: findServiceByName("subscription"),
       document: subscriptionDocument,

@@ -4,6 +4,8 @@ import type { ServiceDefinition } from "../types/service";
 const AUTH_BASE_PATH = "/api/v1/auth" as const;
 const USER_BASE_PATH = "/api/v1/user" as const;
 const CONTENT_BASE_PATH = "/api/v1/content" as const;
+const ENGAGEMENT_BASE_PATH = "/api/v1/engagement" as const;
+const SEARCH_BASE_PATH = "/api/v1/search" as const;
 const SUBSCRIPTION_BASE_PATH = "/api/v1/subscription" as const;
 
 export function getServiceRegistry(): readonly ServiceDefinition[] {
@@ -45,6 +47,28 @@ export function getServiceRegistry(): readonly ServiceDefinition[] {
       internalBasePath: "/api/v1/content",
       publicPrefixes: ["/catalog", "/mobile"],
       adminPrefixes: ["/admin"],
+    },
+    {
+      name: "engagement",
+      displayName: "Engagement Service",
+      description: "Likes, saves, views, and engagement stats",
+      basePath: ENGAGEMENT_BASE_PATH,
+      target: resolveServiceUrl("engagement"),
+      swaggerPath: "/openapi.json",
+      access: "authenticated",
+      rateLimitPolicy: "authenticated",
+      internalBasePath: ENGAGEMENT_BASE_PATH,
+    },
+    {
+      name: "search",
+      displayName: "Search Service",
+      description: "Public search across the catalog",
+      basePath: SEARCH_BASE_PATH,
+      target: resolveServiceUrl("search"),
+      swaggerPath: "/openapi.json",
+      access: "public",
+      rateLimitPolicy: "anonymous",
+      internalBasePath: SEARCH_BASE_PATH,
     },
     {
       name: "subscription",
