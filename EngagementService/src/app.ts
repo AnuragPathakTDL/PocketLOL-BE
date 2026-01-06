@@ -41,6 +41,16 @@ export async function buildApp() {
   await app.register(serviceAuthPlugin);
   await app.register(internalRoutes, { prefix: "/internal" });
 
+  app.setErrorHandler(async (error, request, reply) => {
+    if (error instanceof Error && error.message.startsWith("UNAUTHORIZED:")) {
+      request.log.warn({ err: error }, "Unauthorized request");
+      return reply.unauthorized(
+        error.message.replace("UNAUTHORIZED:", "").trim()
+      );
+    }
+    return reply.send(error);
+  });
+
   app.get("/health", async () => ({ status: "ok" }));
 
   return app;

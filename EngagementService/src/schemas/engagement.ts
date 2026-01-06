@@ -42,6 +42,49 @@ export const continueWatchResponseSchema = z.object({
   ),
 });
 
+export const entityIdParamsSchema = z.object({
+  entityId: z.string().uuid(),
+});
+
+export const reelIdParamsSchema = z.object({
+  reelId: z.string().uuid(),
+});
+
+export const seriesIdParamsSchema = z.object({
+  seriesId: z.string().uuid(),
+});
+
+export const statsSchema = z.object({
+  likes: z.number().int().nonnegative(),
+  views: z.number().int().nonnegative(),
+});
+
+export const saveResponseSchema = z.object({
+  saved: z.boolean(),
+});
+
+export const likeResponseSchema = z.object({
+  liked: z.boolean(),
+  likes: z.number().int().nonnegative(),
+  views: z.number().int().nonnegative(),
+});
+
+export const viewResponseSchema = z.object({
+  views: z.number().int().nonnegative(),
+});
+
+export const listResponseSchema = z.object({
+  ids: z.array(z.string().uuid()),
+});
+
+export const statsBatchRequestSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1).max(200),
+});
+
+export const statsBatchResponseSchema = z.object({
+  stats: z.record(statsSchema),
+});
+
 export type EngagementEventBody = z.infer<typeof engagementEventBodySchema>;
 export type EngagementEventMetrics = z.infer<
   typeof engagementEventMetricsSchema
@@ -49,3 +92,13 @@ export type EngagementEventMetrics = z.infer<
 export type ContinueWatchUpsert = z.infer<typeof continueWatchUpsertSchema>;
 export type ContinueWatchQuery = z.infer<typeof continueWatchQuerySchema>;
 export type ContinueWatchResponse = z.infer<typeof continueWatchResponseSchema>;
+
+export type ReelIdParams = z.infer<typeof reelIdParamsSchema>;
+export type SeriesIdParams = z.infer<typeof seriesIdParamsSchema>;
+export type Stats = z.infer<typeof statsSchema>;
+export type SaveResponse = z.infer<typeof saveResponseSchema>;
+export type LikeResponse = z.infer<typeof likeResponseSchema>;
+export type ViewResponse = z.infer<typeof viewResponseSchema>;
+export type ListResponse = z.infer<typeof listResponseSchema>;
+export type StatsBatchRequest = z.infer<typeof statsBatchRequestSchema>;
+export type StatsBatchResponse = z.infer<typeof statsBatchResponseSchema>;

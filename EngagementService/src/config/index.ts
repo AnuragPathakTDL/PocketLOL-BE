@@ -4,17 +4,27 @@ import { z } from "zod";
 dotenv.config();
 
 const envSchema = z.object({
-  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  NODE_ENV: z
+    .enum(["development", "test", "production"])
+    .default("development"),
   HTTP_HOST: z.string().default("0.0.0.0"),
   HTTP_PORT: z.coerce.number().int().positive().default(4700),
   HTTP_BODY_LIMIT: z.coerce.number().int().positive().default(1_048_576),
   LOG_LEVEL: z
     .enum(["fatal", "error", "warn", "info", "debug", "trace"])
     .default("info"),
+  REDIS_URL: z
+    .string()
+    .optional()
+    .transform((value) =>
+      value && value.trim().length > 0 ? value : undefined
+    ),
   SERVICE_AUTH_TOKEN: z
     .string()
     .optional()
-    .transform((value) => (value && value.trim().length > 0 ? value : undefined)),
+    .transform((value) =>
+      value && value.trim().length > 0 ? value : undefined
+    ),
 });
 
 type Env = z.infer<typeof envSchema>;
