@@ -2,15 +2,55 @@ import fp from "fastify-plugin";
 import { createRemoteJWKSet, jwtVerify, JWTPayload } from "jose";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { loadConfig } from "../config";
+import { createHttpError } from "../utils/errors";
 import type { GatewayUser, GatewayRole, GatewayUserType } from "../types";
 
 const AUTH_HEADER_PREFIX = "Bearer ";
 
 function extractTokenFromHeader(authHeader?: string) {
-  if (!authHeader || !authHeader.startsWith(AUTH_HEADER_PREFIX)) {
+  if (!authHeader) {
     return null;
   }
-  return authHeader.substring(AUTH_HEADER_PREFIX.length);
+
+  const match = authHeader.match(/^Bearer\s+(.+)$/i);
+  if (!match) {
+    return null;
+  }
+
+  return match[1];
+}
+
+function getPathname(url: string): string {
+  const queryIndex = url.indexOf("?");
+  return queryIndex === -1 ? url : url.slice(0, queryIndex);
+}
+
+function isKnownPublicEndpoint(pathname: string, method: string): boolean {
+  if (method === "OPTIONS") {
+    return true;
+  }
+
+  // Public AuthService endpoints (via APIGW auth routes or proxy).
+  if (method === "POST") {
+    if (
+      pathname === "/api/v1/auth/admin/login" ||
+      pathname === "/api/v1/auth/admin/register" ||
+      pathname === "/api/v1/auth/customer/login" ||
+      pathname === "/api/v1/auth/guest/init" ||
+      pathname === "/api/v1/auth/token/refresh"
+    ) {
+      return true;
+    }
+  }
+
+  // Health checks are always public.
+  if (method === "GET") {
+    if (pathname === "/health/live" || pathname === "/health/ready") {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function toGatewayUser(payload: JWTPayload): GatewayUser {
@@ -77,6 +117,11 @@ export default fp(
         return;
       }
 
+      const pathname = getPathname(request.url);
+      if (isKnownPublicEndpoint(pathname, request.method)) {
+        return;
+      }
+
       const token = extractTokenFromHeader(request.headers.authorization);
       if (!token) {
         await fastify.publishAuditEvent({
@@ -90,8 +135,7 @@ export default fp(
             method: request.method,
           },
         });
-        reply.code(401);
-        throw new Error("Authorization header missing or malformed");
+        throw createHttpError(401, "Authorization header missing or malformed");
       }
 
       try {
@@ -118,8 +162,7 @@ export default fp(
             method: request.method,
           },
         });
-        reply.code(401);
-        throw new Error("Invalid or expired token");
+        throw createHttpError(401, "Invalid or expired token", error);
       }
     }
 

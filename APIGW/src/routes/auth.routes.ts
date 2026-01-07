@@ -1,5 +1,4 @@
-import fp from "fastify-plugin";
-import type { FastifyInstance } from "fastify";
+import type { FastifyPluginAsync } from "fastify";
 import {
   adminLoginBodySchema,
   adminRegisterBodySchema,
@@ -30,7 +29,7 @@ import {
 } from "../proxy/auth.proxy";
 import { createHttpError } from "../utils/errors";
 
-export default fp(async function authRoutes(fastify: FastifyInstance) {
+const authRoutes: FastifyPluginAsync = async function authRoutes(fastify) {
   fastify.route<{
     Body: AdminLoginBody;
     Reply: TokenPayload;
@@ -261,4 +260,6 @@ export default fp(async function authRoutes(fastify: FastifyInstance) {
       return reply.status(200).send({});
     },
   });
-});
+};
+
+export default authRoutes;
